@@ -5,7 +5,14 @@ Script for managing Twitter Bot posting updates on Mars Curiosity Mission (data 
 
 ### Functionality:
 
-* pull all MARS REMS instrument data since begining of the mission and save as *json(data source CAB: https://cab.inta-csic.es/rems/)
+* pull last day data from the MARS REMS (Rover Environmental Monitoring Station) instrument (data source CAB: https://cab.inta-csic.es/rems/)
 
-* pull last day data from the CAB
+* pull all data from the MARS REMS
+
 * pull last day images from NASA open API (for different cameras - there are 7 cameras on board to use)
+
+* create gif files from downloaded images
+
+* create and test twitter messages
+
+* post twitter messages with or without picture
