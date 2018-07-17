@@ -125,6 +125,3 @@ def post_message_with_photo_on_twitter(message, photo_path):
     photo = open(photo_path, 'rb')
     response = twitter.upload_media(media=photo)
     twitter.update_status(status=message, media_ids=[response['media_id']])
-
-
-post_message_with_photo_on_twitter("Hi Earthers. Still little dusty on Mars yesterday but it was a drillin' day anyway. :)", './gifs/2112.gif')
