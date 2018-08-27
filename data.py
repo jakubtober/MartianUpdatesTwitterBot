@@ -17,13 +17,17 @@ WAITING_TIME = 5
 
 
 def initiate_selenium(url, time_to_wait):
-    driver = webdriver.Chrome('/usr/lib/chromium-browser/chromedriver')
-    driver.get(url)
-    time.sleep(time_to_wait)
-    return driver
+    try:
+        driver = webdriver.Chrome('/usr/lib/chromium-browser/chromedriver')
+        driver.get(url)
+        time.sleep(time_to_wait)
+        return driver
+    except:
+        raise Exception("Sorry, couldn't initalize Selenium webdriver for Chrome...")
 
 
 class RoverData():
+    present_sol_number = 0
     last_day_data = {}
     whole_mars_rems_history = {}
     photo_file_names = []
@@ -39,8 +43,10 @@ class RoverData():
         self.time = time
 
 
-    def get_last_day_data(self):
+    def get_remaining_mars_rems_data(self):
         driver = initiate_selenium(REAL_DATA_URL_REMS, WAITING_TIME)
+        data_not_exists = True
+
         self.last_day_data = {
             'earths_date': driver.find_element_by_id('mw-terrestrial_date').text,
             'sol': driver.find_element_by_id('mw-sol').text,
@@ -56,26 +62,63 @@ class RoverData():
             'atmospheric_opacity': driver.find_element_by_id('mw-atmo_opacity').text,
             'radiation_level': driver.find_element_by_id('mw-local_uv_irradiance_index').find_element_by_tag_name('span').get_attribute('title'),
             }
+
+        while data_not_exists:
+            sol_no = driver.find_element_by_id('mw-sol').text
+
+            # test if data already exists in the history
+            data_file = open('mars_rems_data.json', 'r')
+            data = json.load(data_file)
+
+            if sol_no in list(data.keys()):
+                print("Looks like weather database is up to date.")
+                print('Last available weather data for sol: {}'.format(sol_no))
+                data_not_exists = False
+            else:
+                day_weather_data = {
+                    'earths_date': driver.find_element_by_id('mw-terrestrial_date').text,
+                    'sol': driver.find_element_by_id('mw-sol').text,
+                    'air_temp_min': driver.find_element_by_id('mw-min_temp').text,
+                    'air_temp_max': driver.find_element_by_id('mw-max_temp').text,
+                    'ground_temp_min': driver.find_element_by_id('mw-min_gts_temp').text,
+                    'ground_temp_max': driver.find_element_by_id('mw-max_gts_temp').text,
+                    'pressure': driver.find_element_by_id('mw-pressure').text,
+                    'wind_speed': driver.find_element_by_id('mw-wind_speed').text,
+                    'humidity': driver.find_element_by_id('mw-abs_humidity').text,
+                    'sunrise_time': driver.find_element_by_id('mw-sunrise').text,
+                    'sunset_time': driver.find_element_by_id('mw-sunset').text,
+                    'atmospheric_opacity': driver.find_element_by_id('mw-atmo_opacity').text,
+                    'radiation_level': driver.find_element_by_id('mw-local_uv_irradiance_index').find_element_by_tag_name('span').get_attribute('title'),
+                    }
+                data[sol_no] = day_weather_data
+                with open("mars_rems_data.json", "w") as write_file:
+                    json.dump(data, write_file)
+                print('Data collected and added to database.')
+                print(day_weather_data)
+
+            driver.find_element_by_id('mw-previous').click()
+            time.sleep(2)
+
         driver.close()
 
 
-    def get_whole_history_mars_rems_data(self):
-        initiate_selenium(REAL_DATA_URL, 3)
-        no_of_sols = int(driver.find_element_by_id('mw-sol').text)
-        self.whole_mars_rems_history = {}
-        for day in range(0, no_of_sols):
-            try:
-                sol = int(driver.find_element_by_id('mw-sol').text)
-                whole_mars_rems_history[sol] = get_last_day_data()
-            except:
-                print("Sorry, {} data was not fully available...".format(sol))
+    def get_time(self):
+        driver = initiate_selenium(MARS_NASA_GOV, 2)
+        self.location_and_time_str = driver.find_element_by_class_name('current_location').find_element_by_class_name('description').text
+        time_str_list = self.location_and_time_str.split(' ')[:2]
+        self.location_str = self.location_and_time_str.split('-')[1]
+        self.time_str = self.location_and_time_str.split('-')[0]
+        hour = int(time_str_list[0].split(':')[0])
+        minutes = int(time_str_list[0].split(':')[1])
+        am_pm = time_str_list[1]
+        self.time = [hour, minutes, am_pm]
 
-            with open("mars_rems_data.json", "w") as write_file:
-                json.dump(whole_mars_rems_history, write_file)
+        self.present_sol_number = int(driver.find_element_by_class_name('time_years').text[:4])
 
-            print("Sols left: {}".format(no_of_sols - day))
-            driver.find_element_by_id('mw-previous').click()
-            time.sleep(2)
+
+        print('Actual time collected. Present sol: {}. Local Mars time is: {}.'.format(self.present_sol_number, str(self.time)))
+        print('Location collected. Rover is in: {}'.format(self.location_str))
+        driver.close()
 
 
     def get_photos(self, sol, cam):
@@ -110,16 +153,3 @@ class RoverData():
             driver.close()
             print("Photos left: {}".format(no_of_photos - photo_id))
             photo_id += 1
-
-
-    def get_time(self):
-        driver = initiate_selenium(MARS_NASA_GOV, 2)
-        self.location_and_time_str = driver.find_element_by_class_name('current_location').find_element_by_class_name('description').text
-        time_str_list = self.location_and_time_str.split(' ')[:2]
-        self.location_str = self.location_and_time_str.split('-')[1]
-        self.time_str = self.location_and_time_str.split('-')[0]
-        hour = int(time_str_list[0].split(':')[0])
-        minutes = int(time_str_list[0].split(':')[1])
-        am_pm = time_str_list[1]
-        self.time = [hour, minutes, am_pm]
-        driver.close()
