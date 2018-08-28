@@ -72,7 +72,6 @@ class RoverData():
 
             if sol_no in list(data.keys()):
                 print("Looks like weather database is up to date.")
-                print('Last available weather data for sol: {}'.format(sol_no))
                 data_not_exists = False
             else:
                 day_weather_data = {

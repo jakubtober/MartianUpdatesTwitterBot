@@ -2,10 +2,16 @@ from app_auth import APP_KEY, APP_SECRET, OAUTH_TOKEN, OAUTH_TOKEN_SECRET
 from twython import Twython
 import json
 
+LOCATION = 'location'
+TIME = 'time'
+LOCATION_AND_TIME ='location_and_time'
+WEATHER = 'weather'
+message_types = [LOCATION, TIME, LOCATION_AND_TIME, WEATHER]
 
 class Message():
     my_data = []
     message = ''
+    message_type = ''
     photo = ''
     photo_caption = ''
     hastags = ' #Mars #space #Rover #Curiosity #planets #science'
@@ -40,14 +46,17 @@ class Message():
                 greeting = 'night'
                 sentence = 'How is (or was) your day on Earth?. :)'
         self.message = 'Good {}, it is {} here on Mars. {}'.format(greeting, time_str, sentence)
+        self.message_type = TIME
 
 
     def create_tweet_message_location(self):
         self.message = 'Hi im in{}.'.format(self.my_data.location_str)
+        self.message_type = LOCATION
 
 
     def create_tweet_message_location_and_time(self):
         self.message = 'Hi, just to let you know im in{}. It is {}here on Mars.'.format(self.my_data.location_str, self.my_data.time_str)
+        self.message_type = LOCATION_AND_TIME
 
 
     def create_tweet_message_weather(self):
@@ -58,10 +67,7 @@ class Message():
             self.my_data.last_day_data['air_temp_min'],
             self.my_data.last_day_data['radiation_level']
         )
-
-
-    def choose_message_type(self):
-        pass
+        self.message_type = WEATHER
 
 
     def test_tweet_in_cmd_before_posting(self):
@@ -78,6 +84,13 @@ class Message():
     def post_on_twitter(self):
         twitter = Twython(APP_KEY, APP_SECRET, OAUTH_TOKEN, OAUTH_TOKEN_SECRET)
         twitter.update_status(status=self.message + self.hastags)
+
+        posts_history_file = open('posts_history.json', 'r+')
+        history_data = json.load(posts_history_file)
+        history_data[self.my_data.last_day_data['sol']] = self.message_type
+
+        with open('posts_history.json', 'w') as posts_history_file:
+            json.dump(history_data, posts_history_file)
 
 
     def post_message_with_photo_on_twitter(self):
