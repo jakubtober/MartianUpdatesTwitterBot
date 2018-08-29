@@ -9,7 +9,7 @@ class Bot():
     message_to_post = None
 
     def __init__(self):
-        print('Bot initalized.')
+        print('Initalizing bot.')
         print('Collecting data...')
         my_data = data.RoverData()
         my_data.get_remaining_mars_rems_data()
@@ -41,6 +41,8 @@ class Bot():
 
     def choose_message(self):
         sols = []
+        posts_history_with_indexes = {}
+        is_post_selected = False
 
         posts_history_file = open('posts_history.json')
         history_data = json.load(posts_history_file)
@@ -62,6 +64,19 @@ class Bot():
             if message_type not in last_days_history[:4]:
                 self.message_to_post = self.sample_messages[message_type]
                 print('Type for new message: ' + str(message_type))
+                is_post_selected = True
                 break
 
+        if is_post_selected == False:
+            print(is_post_selected)
+            for message_type in available_message_types_for_new_post:
+                for index in range(len(last_days_history)):
+                    if last_days_history[index] == message_type:
+                        posts_history_with_indexes[index] = message_type
+                        break
+            posts_history_index_max = max(list(posts_history_with_indexes.keys()))
+            self.message_to_post = self.sample_messages[posts_history_with_indexes[posts_history_index_max]]
+
         print('New potential message to post: ' + str(self.message_to_post))
+        # self.message_to_post.post_on_twitter()
+        print('Message posted on twitter.')
