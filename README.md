@@ -9,6 +9,6 @@ Twitter Bot posting updates on Mars Curiosity Mission (data pulled from NASA API
 
 * pull last day images from NASA open API (for different cameras - there are 7 cameras on board to use)
 
-* create (and test if needed) twitter messages, 3 different types depending on history of what has been already posted during last days and what data is available
+* create (and test if needed) 3 different type of twitter messages, post one depending on history of what has been already posted during last days and what data is available
 
 * post twitter messages with or without pictures
