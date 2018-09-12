@@ -1,5 +1,5 @@
 # Martian Updates Twitter Bot
-Script for managing Twitter Bot posting updates on Mars Curiosity Mission (data automatically pulled from NASA APIs and via Selenium web scraper from NASAs partner agencies).
+Twitter Bot posting updates on Mars Curiosity Mission (data pulled from NASA APIs and scraped from NASAs partner agencies using Selenium).
 
 ## https://twitter.com/MartianUpdates
 
