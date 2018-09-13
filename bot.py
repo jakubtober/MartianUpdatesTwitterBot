@@ -83,7 +83,7 @@ class Bot():
 
         # check if post for last availabe sol hasn't been published yet, if not publish on twitter
         if int(self.my_data.last_day_data['sol']) not in sols_in_history:
-            # self.message_to_post.post_on_twitter()
+            self.message_to_post.post_on_twitter()
             print('Message posted on twitter.')
             pass
         else:
