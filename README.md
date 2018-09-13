@@ -3,6 +3,8 @@ Twitter Bot posting updates on Mars Curiosity Mission (data pulled from NASA API
 
 ## https://twitter.com/MartianUpdates
 
+![alt text](https://raw.githubusercontent.com/jakubtober/MartianUpdatesTwitterBot/master/%40MartianUpdates_screenshot.jpg "@MartianUpdates")
+
 ### Functionality:
 
 * pull data from the MARS REMS (Rover Environmental Monitoring Station) instrument (data source CAB: https://cab.inta-csic.es/rems/) and save it
