@@ -15,18 +15,20 @@ class Bot():
             self.my_data.get_photos(self.my_data.last_day_data['sol'], 'navcam')
         self.my_data.get_time()
 
-        time_message = messages.Message(my_data=self.my_data)
-        location_and_time_message = messages.Message(my_data=self.my_data)
-        weather_message = messages.Message(my_data=self.my_data)
-
-        time_message.create_tweet_message_time()
-        location_and_time_message.create_tweet_message_location_and_time()
-        weather_message.create_tweet_message_weather()
-
         self.sample_messages = {}
-        self.sample_messages['time'] = time_message
-        self.sample_messages['location_and_time'] = location_and_time_message
-        self.sample_messages['weather'] = weather_message
+
+        if self.my_data.time:
+            time_message = messages.Message(my_data=self.my_data)
+            time_message.create_tweet_message_time()
+            self.sample_messages['time'] = time_message
+        if self.my_data.time and self.my_data.location_str:
+            location_and_time_message = messages.Message(my_data=self.my_data)
+            location_and_time_message.create_tweet_message_location_and_time()
+            self.sample_messages['location_and_time'] = location_and_time_message
+        if self.my_data.last_day_data:
+            weather_message = messages.Message(my_data=self.my_data)
+            weather_message.create_tweet_message_weather()
+            self.sample_messages['weather'] = weather_message
 
     def print_sample_messages_in_cmd(self):
         print('Sample messages:' + '\n')
@@ -50,8 +52,8 @@ class Bot():
             sorted(sols_in_history, reverse=True)]
         )
 
-        print('Last post was for sol: ' + str(max(sols_in_history)))
-        print('Post post type: ' + history_data[str(max(sols_in_history))])
+        print('Last message posted on sol: ' + str(max(sols_in_history)))
+        print('Last post type: ' + history_data[str(max(sols_in_history))])
         print('Last posts types: ' + str(last_days_history))
 
         available_message_types_for_new_post = [key for key in self.sample_messages.keys()]
@@ -82,7 +84,7 @@ class Bot():
         print('New potential message to post: ' + str(self.message_to_post))
 
         # check if post for last availabe sol hasn't been published yet, if not publish on twitter
-        if int(self.my_data.last_day_data['sol']) not in sols_in_history:
+        if self.my_data.present_sol_number not in sols_in_history:
             self.message_to_post.post_on_twitter()
             print('Message posted on twitter.')
             pass

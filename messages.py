@@ -57,7 +57,7 @@ class Message():
         self.message_type = TIME
 
     def create_tweet_message_location_and_time(self):
-        self.message = 'Hi, just to let you know im in{}. It is {}here on Mars.'.format(
+        self.message = 'Location and time report: im in{}. It is {}here on Mars.'.format(
             self.my_data.location_str,
             self.my_data.time_str
         )
@@ -96,7 +96,9 @@ class Message():
 
         posts_history_file = open('posts_history.json', 'r+')
         history_data = json.load(posts_history_file)
-        history_data[self.my_data.last_day_data['sol']] = self.message_type
+        # history_data[self.my_data.last_day_data['sol']] = self.message_type
+        history_data[str(self.my_data.present_sol_number)] = self.message_type
+
 
         with open('posts_history.json', 'w') as posts_history_file:
             json.dump(history_data, posts_history_file)

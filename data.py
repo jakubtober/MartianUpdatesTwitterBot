@@ -38,13 +38,13 @@ class RoverData():
             print("Can't access MARS REMS data source...")
 
     def get_remaining_mars_rems_data(self):
-        browser = initiate_selenium(REAL_DATA_URL_REMS, WAITING_TIME)
         data_not_exists = False
 
         if self.status_code_mars_rems.status_code != 200:
             print('Sorry, no REMS data available at the moment...')
             self.last_day_data = {}
         else:
+            browser = initiate_selenium(REAL_DATA_URL_REMS, WAITING_TIME)
             self.last_day_data = {
                 'earths_date': browser.find_element_by_id('mw-terrestrial_date').text,
                 'sol': browser.find_element_by_id('mw-sol').text,
@@ -103,33 +103,39 @@ class RoverData():
 
                 browser.find_element_by_id('mw-previous').click()
                 time.sleep(2)
-            browser.close()
+                browser.close()
 
     def get_time(self):
-        browser = initiate_selenium(MARS_NASA_GOV, 2)
+        if self.status_code_mars_gov.status_code != 200:
+            self.location_and_time = ''
+            self.location_str = ''
+            self.time_str = ''
+            self.time = []
+        else:
+            browser = initiate_selenium(MARS_NASA_GOV, 2)
 
-        # dirty time extraction straight form website
-        self.location_and_time_str = (
-            browser.find_element_by_class_name('current_location')
-            .find_element_by_class_name('description')
-            .text
-        )
-        time_str_list = self.location_and_time_str.split(' ')[:2]
-        self.location_str = self.location_and_time_str.split('-')[1]
-        self.time_str = self.location_and_time_str.split('-')[0]
-        hour = int(time_str_list[0].split(':')[0])
-        minutes = int(time_str_list[0].split(':')[1])
-        am_pm = time_str_list[1]
-        self.time = [hour, minutes, am_pm]
+            # dirty time extraction straight form website
+            self.location_and_time_str = (
+                browser.find_element_by_class_name('current_location')
+                .find_element_by_class_name('description')
+                .text
+            )
+            time_str_list = self.location_and_time_str.split(' ')[:2]
+            self.location_str = self.location_and_time_str.split('-')[1]
+            self.time_str = self.location_and_time_str.split('-')[0]
+            hour = int(time_str_list[0].split(':')[0])
+            minutes = int(time_str_list[0].split(':')[1])
+            am_pm = time_str_list[1]
+            self.time = [hour, minutes, am_pm]
 
-        self.present_sol_number = int(browser.find_element_by_class_name('time_years').text[:4])
+            self.present_sol_number = int(browser.find_element_by_class_name('time_years').text[:4])
 
-        print((
-            'Actual time collected. Present sol: {}. Local Mars time is: {}.'
-            .format(self.present_sol_number, str(self.time)))
-        )
-        print('Location collected. Rover is in: {}'.format(self.location_str))
-        browser.close()
+            print((
+                'Actual time collected. Present sol: {}. Local Mars time is: {}.'
+                .format(self.present_sol_number, str(self.time)))
+            )
+            print('Location collected. Rover is in: {}'.format(self.location_str))
+            browser.close()
 
     def get_photos(self, sol, cam):
         '''ROVER CAMERAS
