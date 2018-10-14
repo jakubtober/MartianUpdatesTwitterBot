@@ -2,14 +2,14 @@ import messages
 import data
 import json
 import random
-
+from data import time_now
 
 class Bot():
 
     def __init__(self, load_photos='no'):
-        print('Initalizing bot.')
+        print(time_now() + 'starting bot...')
         self.my_data = data.RoverData()
-        print('Collecting data...')
+        print(time_now() + 'collecting data...')
         self.my_data.get_remaining_mars_rems_data()
         if load_photos == 'yes':
             self.my_data.get_photos(self.my_data.last_day_data['sol'], 'navcam')
@@ -31,7 +31,7 @@ class Bot():
             self.sample_messages['weather'] = weather_message
 
     def print_sample_messages_in_cmd(self):
-        print('Sample messages:' + '\n')
+        print(time_now() + 'sample messages:' + '\n')
         print(self.sample_messages['time'])
         print(self.sample_messages['location_and_time'])
         print(self.sample_messages['weather'])
@@ -52,25 +52,25 @@ class Bot():
             sorted(sols_in_history, reverse=True)]
         )
 
-        print('Last message posted on sol: ' + str(max(sols_in_history)))
-        print('Last post type: ' + history_data[str(max(sols_in_history))])
-        print('Last posts types: ' + str(last_days_history))
+        print(time_now() + 'last message posted on sol: ' + str(max(sols_in_history)))
+        print(time_now() + 'last post type: ' + history_data[str(max(sols_in_history))])
+        # print(time_now() + 'last posts types: ' + str(last_days_history))
 
         available_message_types_for_new_post = [key for key in self.sample_messages.keys()]
         random.shuffle(available_message_types_for_new_post)
-        print('Types of posts availabe for new post: ' + str(available_message_types_for_new_post))
+        print(time_now() + 'types of posts availabe for new post: ' + str(available_message_types_for_new_post))
 
         # check 3 days history of posts, use new topic if not used during this time
         for message_type in available_message_types_for_new_post:
             if message_type not in last_days_history[:3]:
                 self.message_to_post = self.sample_messages[message_type]
-                print('Type for new message: ' + str(message_type))
+                print(time_now() + 'type for new message: ' + str(message_type))
                 is_post_selected = True
                 break
 
         # if all post types has been used for last 3 days, use the oldest used topic
         if is_post_selected == False:
-            print("Looking for the oldest topic...")
+            print(time_now() + "looking for the oldest topic...")
             for message_type in available_message_types_for_new_post:
                 for index in range(len(last_days_history)):
                     if last_days_history[index] == message_type:
@@ -81,12 +81,12 @@ class Bot():
                 self.sample_messages[posts_history_with_indexes[posts_history_index_max]]
             )
 
-        print('New potential message to post: ' + str(self.message_to_post))
+        print(time_now() + 'new potential message to post: ' + str(self.message_to_post))
 
         # check if post for last availabe sol hasn't been published yet, if not publish on twitter
         if self.my_data.present_sol_number not in sols_in_history:
             self.message_to_post.post_on_twitter()
-            print('Message posted on twitter.')
+            print(time_now() + 'message posted on twitter.')
             pass
         else:
-            print("There are already posts for this sol on twitter, can't publish it.")
+            print(time_now() + "there are already posts for this sol on twitter, can't publish it.")

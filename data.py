@@ -8,6 +8,8 @@ from twython import Twython
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 from selenium.common.exceptions import NoSuchElementException
+from datetime import datetime
+
 
 MARS_NASA_GOV = 'https://mars.nasa.gov/mars-exploration/overlay-curiosity/'
 REAL_DATA_URL_REMS = (
@@ -18,6 +20,9 @@ TEST_DATA_URL_REMS = 'file:///home/jakub/Coders_lab/MartianUpdates/REMS%20Weathe
 # Waiting for x seconds before scraping as it takes some time to load data from
 # server and to render widget/page etc
 WAITING_TIME = 5
+
+def time_now():
+    return str(datetime.now().strftime('%Y-%m-%d %H:%M:%S') + ': ')
 
 def initiate_selenium(url, time_to_wait):
     options = Options()
@@ -35,16 +40,16 @@ class RoverData():
         self.status_code_mars_rems = requests.get(REAL_DATA_URL_REMS)
 
         if self.status_code_mars_gov.status_code != 200:
-            print("Can't access MARS GOV data source...")
+            print(time_now() + "can't access MARS GOV data source...")
 
         if self.status_code_mars_rems.status_code != 200:
-            print("Can't access MARS REMS data source...")
+            print(time_now() + "can't access MARS REMS data source...")
 
     def get_remaining_mars_rems_data(self):
         data_not_exists = True
 
         if self.status_code_mars_rems.status_code != 200:
-            print('Sorry, no REMS data available at the moment...')
+            print(time_now() + 'sorry, no REMS data available at the moment...')
             self.last_day_data = {}
         else:
             browser = initiate_selenium(REAL_DATA_URL_REMS, WAITING_TIME)
@@ -76,7 +81,7 @@ class RoverData():
 
                 # test if data already exists in the history, collect it if not
                 if sol_no in list(data.keys()):
-                    print("Looks like there is no new weather REMS data.")
+                    print(time_now() + "looks like there is no new weather REMS data.")
                     data_not_exists = False
                 else:
                     day_weather_data = {
@@ -101,7 +106,7 @@ class RoverData():
                     data[sol_no] = day_weather_data
                     with open("mars_rems_data.json", "w") as write_file:
                         json.dump(data, write_file)
-                    print('Data collected and added to database.')
+                    print(time_now() + 'data collected and added to database.')
                     print(day_weather_data)
 
                 browser.find_element_by_id('mw-previous').click()
@@ -134,10 +139,10 @@ class RoverData():
             self.present_sol_number = int(browser.find_element_by_class_name('time_years').text[:4])
 
             print((
-                'Actual time collected. Present sol: {}. Local Mars time is: {}.'
+                time_now() + 'actual time collected. Present sol: {}. Local Mars time is: {}.'
                 .format(self.present_sol_number, str(self.time)))
             )
-            print('Location collected. Rover is in: {}'.format(self.location_str))
+            print(time_now() + 'location collected. Rover is in: {}'.format(self.location_str))
             browser.close()
 
     def get_photos(self, sol, cam):
@@ -160,7 +165,7 @@ class RoverData():
         data = json.loads(response.text)
         no_of_photos = len(data['photos'])
         file_names = []
-        print('Number of photos: {}'.format(no_of_photos))
+        print(time_now() + 'number of photos: {}'.format(no_of_photos))
         photo_id = 1
         for element in data['photos']:
             browser = initiate_selenium(element['img_src'], 2)
