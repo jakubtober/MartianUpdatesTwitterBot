@@ -6,6 +6,7 @@ from PIL import Image
 from app_auth import APP_KEY, APP_SECRET, OAUTH_TOKEN, OAUTH_TOKEN_SECRET
 from twython import Twython
 from selenium import webdriver
+from selenium.webdriver.chrome.options import Options
 from selenium.common.exceptions import NoSuchElementException
 
 MARS_NASA_GOV = 'https://mars.nasa.gov/mars-exploration/overlay-curiosity/'
@@ -19,7 +20,9 @@ TEST_DATA_URL_REMS = 'file:///home/jakub/Coders_lab/MartianUpdates/REMS%20Weathe
 WAITING_TIME = 5
 
 def initiate_selenium(url, time_to_wait):
-    browser = webdriver.Chrome('/usr/lib/chromium-browser/chromedriver')
+    options = Options()
+    options.headless = True
+    browser = webdriver.Chrome(options=options, executable_path='/usr/lib/chromium-browser/chromedriver')
     browser.get(url)
     time.sleep(time_to_wait)
     return browser
@@ -38,7 +41,7 @@ class RoverData():
             print("Can't access MARS REMS data source...")
 
     def get_remaining_mars_rems_data(self):
-        data_not_exists = False
+        data_not_exists = True
 
         if self.status_code_mars_rems.status_code != 200:
             print('Sorry, no REMS data available at the moment...')
