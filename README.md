@@ -1,5 +1,5 @@
 # Martian Updates Twitter Bot
-Twitter Bot posting updates on Mars Curiosity Mission (data pulled from NASA APIs and scraped from NASAs partner agencies using Selenium).
+Twitter Bot posting updates on Mars Curiosity Mission (data pulled from NASA APIs and scraped from NASAs partner agencies using Selenium headless browser).
 
 ## https://twitter.com/MartianUpdates
 
@@ -7,10 +7,10 @@ Twitter Bot posting updates on Mars Curiosity Mission (data pulled from NASA API
 
 ### Functionality:
 
-* pull data from the MARS REMS (Rover Environmental Monitoring Station) instrument (data source CAB: https://cab.inta-csic.es/rems/) and save it
+* pulls data from the MARS REMS (Rover Environmental Monitoring Station) instrument (data source CAB: https://cab.inta-csic.es/rems/) and saves it
 
-* pull last day images from NASA open API (there are 7 cameras on board to use)
+* pulls last day images from NASA open API (there are 7 cameras on board to use)
 
-* create (and test if needed) 3 different type of twitter messages, post one depending on history of what has been already posted during last days and what data is available
+* creates (and test if needed) 3 different type of twitter messages, posts one depending on history of what has been already posted during last days and what data is available
 
-* post twitter messages with or without pictures
+* posts twitter messages with or without pictures
