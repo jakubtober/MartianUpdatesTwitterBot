@@ -1,16 +1,16 @@
 import messages
-import data
+from data_scraper import *
 import json
 import random
-from data import time_now
+
 
 class Bot():
 
     def __init__(self, load_photos='no'):
         print(time_now() + 'starting bot...')
-        self.my_data = data.RoverData()
+        self.my_data = RoverDataScraper()
         print(time_now() + 'collecting data...')
-        self.my_data.get_remaining_mars_rems_data()
+        self.my_data.scrap_missing_sols_data()
         if load_photos == 'yes':
             self.my_data.get_photos(self.my_data.last_day_data['sol'], 'navcam')
         self.my_data.get_time()
@@ -49,16 +49,16 @@ class Bot():
 
         last_days_history = (
             [history_data[str(sols_in_history)] for sols_in_history in
-            sorted(sols_in_history, reverse=True)]
+             sorted(sols_in_history, reverse=True)]
         )
 
         print(time_now() + 'last message posted on sol: ' + str(max(sols_in_history)))
         print(time_now() + 'last post type: ' + history_data[str(max(sols_in_history))])
-        # print(time_now() + 'last posts types: ' + str(last_days_history))
 
         available_message_types_for_new_post = [key for key in self.sample_messages.keys()]
         random.shuffle(available_message_types_for_new_post)
-        print(time_now() + 'types of posts availabe for new post: ' + str(available_message_types_for_new_post))
+        print(time_now() + 'types of posts availabe for new post: ' +
+              str(available_message_types_for_new_post))
 
         # check 3 days history of posts, use new topic if not used during this time
         for message_type in available_message_types_for_new_post:
@@ -81,12 +81,14 @@ class Bot():
                 self.sample_messages[posts_history_with_indexes[posts_history_index_max]]
             )
 
-        print(time_now() + 'new potential message to post: ' + str(self.message_to_post))
+        print(time_now() + 'new message to post: ' + str(self.message_to_post))
 
         # check if post for last availabe sol hasn't been published yet, if not publish on twitter
         if self.my_data.present_sol_number not in sols_in_history:
-            self.message_to_post.post_on_twitter()
-            print(time_now() + 'message posted on twitter.')
-            pass
+            if self.sample_messages:
+                self.message_to_post.post_on_twitter()
+                print(time_now() + 'message posted on twitter.')
+            else:
+                print(time_now() + 'sorry, there are not messages to post now.')
         else:
             print(time_now() + "there are already posts for this sol on twitter, can't publish it.")
