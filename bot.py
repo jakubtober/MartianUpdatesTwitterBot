@@ -2,24 +2,9 @@ import messages
 from data_scraper import *
 import json
 import random
-import logging
-from datetime import datetime
+from my_logger import set_my_logger
 
-logger = logging.getLogger(__name__)
-logger.setLevel(logging.INFO)
-logger_formatter = logging.Formatter('%(asctime)s:%(levelname)s:%(name)s:%(message)s')
-
-date_now = datetime.now()
-logs_filename = '{}_{}_{}.log'.format(
-    date_now.year,
-    date_now.month,
-    date_now.day,
-)
-file_handler = logging.FileHandler('./logs/{}'.format(logs_filename))
-file_handler.setLevel(logging.INFO)
-file_handler.setFormatter(logger_formatter)
-
-logger.addHandler(file_handler)
+logger = set_my_logger(__name__)
 
 
 class Bot():

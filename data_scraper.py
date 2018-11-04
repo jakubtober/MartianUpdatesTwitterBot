@@ -6,8 +6,7 @@ from PIL import Image
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 from selenium.common.exceptions import NoSuchElementException
-from datetime import datetime
-import logging
+from my_logger import set_my_logger
 from app_auth import (
     APP_KEY,
     APP_SECRET,
@@ -21,21 +20,7 @@ from app_auth import (
     API_PASSWORD,
 )
 
-logger = logging.getLogger(__name__)
-logger.setLevel(logging.INFO)
-logger_formatter = logging.Formatter('%(asctime)s:%(levelname)s:%(name)s:%(message)s')
-
-date_now = datetime.now()
-logs_filename = '{}_{}_{}.log'.format(
-    date_now.year,
-    date_now.month,
-    date_now.day,
-)
-file_handler = logging.FileHandler('./logs/{}'.format(logs_filename))
-file_handler.setLevel(logging.INFO)
-file_handler.setFormatter(logger_formatter)
-
-logger.addHandler(file_handler)
+logger = set_my_logger(__name__)
 
 MARS_NASA_GOV = 'https://mars.nasa.gov/mars-exploration/overlay-curiosity/'
 REAL_DATA_URL_REMS = (
@@ -43,10 +28,6 @@ REAL_DATA_URL_REMS = (
 )
 TEST_DATA_URL_REMS = 'file:///home/jakub/Coders_lab/MartianUpdates/REMS%20Weather%20Widget.html'
 WAITING_TIME = 5
-
-
-def time_now():
-    return str(datetime.now().strftime('%Y-%m-%d %H:%M:%S') + ': ')
 
 
 def initiate_selenium(url, time_to_wait):
@@ -154,7 +135,7 @@ class RoverDataScraper():
                     .get_attribute('title')
                 ),
             }
-            logger.info("REMS data for sol: {} scrapped.".format(sol_data['sol']))
+            logger.info("REMS data for sol {} scrapped.".format(sol_data['sol']))
             return sol_data
         except Exception as error:
             return False
@@ -232,7 +213,7 @@ class RoverDataScraper():
             return False
 
     def get_photos(self, sol, cam):
-        '''ROVER CAMERAS
+        """ROVER CAMERAS
         FHAZ	Front Hazard Avoidance Camera
         RHAZ	Rear Hazard Avoidance Camera
         MAST	Mast Camera
@@ -240,7 +221,7 @@ class RoverDataScraper():
         MAHLI	Mars Hand Lens Imager
         MARDI	Mars Descent Imager
         NAVCAM	Navigation Camera
-        '''
+        """
 
         api_endpoint = (
             'https://api.nasa.gov/mars-photos/api/v1/rovers/curiosity/'
