@@ -95,7 +95,7 @@ class Bot():
             # check if post for last availabe sol hasn't been published yet, if not publish on twitter
             if self.my_data.present_sol_number not in sols_in_history:
                 if self.sample_messages:
-                    # self.message_to_post.post_on_twitter()
+                    self.message_to_post.post_on_twitter()
                     logger.info('Message posted on twitter.')
                 else:
                     logger.error('Sorry, there are no messages to post now. Not enough data.')
