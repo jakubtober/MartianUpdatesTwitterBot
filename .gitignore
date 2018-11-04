@@ -53,6 +53,7 @@ coverage.xml
 
 # Django stuff:
 *.log
+logs/
 local_settings.py
 db.sqlite3
 
@@ -119,3 +120,4 @@ REMS Weather Widget.html
 *.json
 app_auth.py
 app_auth.pyc
+.main.py.swp

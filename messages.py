@@ -4,9 +4,10 @@ import json
 import random
 
 TIME = 'time'
-LOCATION_AND_TIME ='location_and_time'
+LOCATION_AND_TIME = 'location_and_time'
 WEATHER = 'weather'
 message_types = [TIME, LOCATION_AND_TIME, WEATHER]
+
 
 class Message():
 
@@ -41,7 +42,7 @@ class Message():
         sentence = ''
         greeting = ''
         time_str = str(self.my_data.time[0]) + ':' + str(self.my_data.time[1]) + ' ' \
-        + self.my_data.time[2]
+            + self.my_data.time[2]
 
         if self.my_data.time[2].lower() == 'am':
             greeting = 'morning'
@@ -96,9 +97,7 @@ class Message():
 
         posts_history_file = open('posts_history.json', 'r+')
         history_data = json.load(posts_history_file)
-        # history_data[self.my_data.last_day_data['sol']] = self.message_type
         history_data[str(self.my_data.present_sol_number)] = self.message_type
-
 
         with open('posts_history.json', 'w') as posts_history_file:
             json.dump(history_data, posts_history_file)

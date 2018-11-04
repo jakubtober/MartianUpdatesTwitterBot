@@ -7,6 +7,7 @@ from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 from selenium.common.exceptions import NoSuchElementException
 from datetime import datetime
+import logging
 from app_auth import (
     APP_KEY,
     APP_SECRET,
@@ -20,6 +21,21 @@ from app_auth import (
     API_PASSWORD,
 )
 
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.INFO)
+logger_formatter = logging.Formatter('%(asctime)s:%(levelname)s:%(name)s:%(message)s')
+
+date_now = datetime.now()
+logs_filename = '{}_{}_{}.log'.format(
+    date_now.year,
+    date_now.month,
+    date_now.day,
+)
+file_handler = logging.FileHandler('./logs/{}'.format(logs_filename))
+file_handler.setLevel(logging.INFO)
+file_handler.setFormatter(logger_formatter)
+
+logger.addHandler(file_handler)
 
 MARS_NASA_GOV = 'https://mars.nasa.gov/mars-exploration/overlay-curiosity/'
 REAL_DATA_URL_REMS = (
@@ -34,13 +50,19 @@ def time_now():
 
 
 def initiate_selenium(url, time_to_wait):
-    options = Options()
-    options.headless = True
-    browser = webdriver.Chrome(
-        options=options, executable_path='/usr/lib/chromium-browser/chromedriver')
-    browser.get(url)
-    time.sleep(time_to_wait)
-    return browser
+    try:
+        options = Options()
+        options.headless = True
+        browser = webdriver.Chrome(
+            options=options, executable_path='/usr/lib/chromium-browser/chromedriver')
+        my_request = requests.get(url)
+        browser.get(url)
+        time.sleep(time_to_wait)
+        logger.info('Selenium successfully initialized.')
+        return browser
+    except Exception as error:
+        logger.error("Couldn't initialize Selenium.")
+        return False
 
 
 class ApiConnetction():
@@ -52,8 +74,9 @@ class ApiConnetction():
         try:
             self.my_file = open('mars_rems_data.json')
             self.my_json = json.load(self.my_file)
+            logger.info("mars_rems_data.json file succeffully loaded.")
         except Exception as error:
-            raise error
+            logger.error("Couldn't load mars_rems_data.json file.")
 
         try:
             data = {
@@ -62,8 +85,10 @@ class ApiConnetction():
             }
             self.response = requests.post(self.AUTH_URL, data)
             self.token = self.response.json()['token']
+            if not self.token:
+                logger.error("Couldn't receive auth token from API.")
         except Exception as error:
-            raise error
+            logger.error("Couldn't authenticate user to API.")
 
     def __len__(self):
         return len(self.my_json)
@@ -79,6 +104,7 @@ class ApiConnetction():
         return self.my_json[str(sol_number)]
 
     def add_single_sol_to_api(self, sol_number):
+        """Adds single sol data from local json file to api"""
         data_to_add = self.get_single_sol_json_file(sol_number)
 
         if self.token:
@@ -88,95 +114,94 @@ class ApiConnetction():
                                          headers=self.auth_headers)
                 return True
             else:
+                logger.error("Received status_code {} from API.".format(
+                    check_sol_exists_response.status_code))
                 return False
 
     def add_all_sols_to_api(self):
+        """Adds all data from local json file to api"""
         for counter, sol_number in enumerate(self.my_json):
             if self.add_single_sol_to_api(sol_number):
-                print('Sols left: ' + str(len(self.my_json) - counter))
+                logger.info('Sols left: ' + str(len(self.my_json) - counter))
             else:
-                print('Sol {} not added - already in the database, or data incorrect'.format(sol_number))
+                logger.error(
+                    'Sol {} not added - already in the database, or data incorrect'.format(sol_number))
 
 
 class RoverDataScraper():
     def __init__(self):
-        self.status_code_mars_gov = requests.get(MARS_NASA_GOV).status_code
-        self.status_code_mars_rems = requests.get(REAL_DATA_URL_REMS).status_code
-
-        if self.status_code_mars_gov != 200:
-            print(time_now() + "can't access MARS GOV data source...")
-
-        if self.status_code_mars_rems != 200:
-            print(time_now() + "can't access MARS REMS data source...")
+        self.last_day_data = {}
 
     def scrap_single_sol_data(self, browser):
-        """Scrap single sol REMS data."""
-        sol_data = {
-            'earths_date': browser.find_element_by_id('mw-terrestrial_date').text,
-            'sol': browser.find_element_by_id('mw-sol').text,
-            'air_temp_min': browser.find_element_by_id('mw-min_temp').text,
-            'air_temp_max': browser.find_element_by_id('mw-max_temp').text,
-            'ground_temp_min': browser.find_element_by_id('mw-min_gts_temp').text,
-            'ground_temp_max': browser.find_element_by_id('mw-max_gts_temp').text,
-            'pressure': browser.find_element_by_id('mw-pressure').text,
-            'wind_speed': browser.find_element_by_id('mw-wind_speed').text,
-            'humidity': browser.find_element_by_id('mw-abs_humidity').text,
-            'sunrise_time': browser.find_element_by_id('mw-sunrise').text,
-            'sunset_time': browser.find_element_by_id('mw-sunset').text,
-            'atmospheric_opacity': browser.find_element_by_id('mw-atmo_opacity').text,
-            'radiation_level': (
-                browser.find_element_by_id('mw-local_uv_irradiance_index')
-                .find_element_by_tag_name('span')
-                .get_attribute('title')
-            ),
-        }
-        return sol_data
+        """Scraps single sol REMS data."""
+        try:
+            sol_data = {
+                'earths_date': browser.find_element_by_id('mw-terrestrial_date').text,
+                'sol': browser.find_element_by_id('mw-sol').text,
+                'air_temp_min': browser.find_element_by_id('mw-min_temp').text,
+                'air_temp_max': browser.find_element_by_id('mw-max_temp').text,
+                'ground_temp_min': browser.find_element_by_id('mw-min_gts_temp').text,
+                'ground_temp_max': browser.find_element_by_id('mw-max_gts_temp').text,
+                'pressure': browser.find_element_by_id('mw-pressure').text,
+                'wind_speed': browser.find_element_by_id('mw-wind_speed').text,
+                'humidity': browser.find_element_by_id('mw-abs_humidity').text,
+                'sunrise_time': browser.find_element_by_id('mw-sunrise').text,
+                'sunset_time': browser.find_element_by_id('mw-sunset').text,
+                'atmospheric_opacity': browser.find_element_by_id('mw-atmo_opacity').text,
+                'radiation_level': (
+                    browser.find_element_by_id('mw-local_uv_irradiance_index')
+                    .find_element_by_tag_name('span')
+                    .get_attribute('title')
+                ),
+            }
+            logger.info("REMS data for sol: {} scrapped.".format(sol_data['sol']))
+            return sol_data
+        except Exception as error:
+            return False
 
     def scrap_missing_sols_data(self):
         """Scrap REMS data for sols that are not in the database yet."""
-        data_not_exists = True
 
-        if self.status_code_mars_rems != 200:
-            print(time_now() + 'sorry, no REMS data available at the moment...')
-            self.last_day_data = {}
-        else:
-            browser = initiate_selenium(REAL_DATA_URL_REMS, WAITING_TIME)
+        data_not_exists = True
+        browser = initiate_selenium(REAL_DATA_URL_REMS, WAITING_TIME)
+
+        if browser:
             self.last_day_data = self.scrap_single_sol_data(browser)
 
-            while data_not_exists:
-                sol_no = browser.find_element_by_id('mw-sol').text
+            if self.last_day_data:
+                while data_not_exists:
+                    sol_no = browser.find_element_by_id('mw-sol').text
 
-                data_file = open('mars_rems_data.json', 'r')
-                data = json.load(data_file)
+                    data_file = open('mars_rems_data.json', 'r')
+                    data = json.load(data_file)
 
-                if sol_no in list(data.keys()):
-                    print(time_now() + "looks like there is no new weather REMS data.")
-                    data_not_exists = False
-                else:
-                    day_weather_data = self.scrap_single_sol_data(browser)
-                    data[sol_no] = day_weather_data
-                    with open("mars_rems_data.json", "w") as write_file:
-                        json.dump(data, write_file)
-                    print(time_now() + 'data for sol {} collected and added to database.'.format(sol_no))
+                    if sol_no in list(data.keys()):
+                        logger.info("REMS data is up to date.")
+                        data_not_exists = False
+                    else:
+                        day_weather_data = self.scrap_single_sol_data(browser)
+                        data[sol_no] = day_weather_data
+                        with open("mars_rems_data.json", "w") as write_file:
+                            json.dump(data, write_file)
+                        logger.info('Data for sol {} collected and added to database.'.format(sol_no))
 
-                    my_api_connection = ApiConnetction()
-                    my_api_connection.add_single_sol_to_api(sol_no)
-                    print(time_now() + 'data for sol {} added to API.'.format(sol_no))
+                        my_api_connection = ApiConnetction()
+                        my_api_connection.add_single_sol_to_api(sol_no)
+                        logger.info('Data for sol {} added to API.'.format(sol_no))
 
-                browser.find_element_by_id('mw-previous').click()
-                time.sleep(2)
-            browser.close()
+                    browser.find_element_by_id('mw-previous').click()
+                    time.sleep(2)
+                browser.close()
+                return True
+            else:
+                logger.info("self.last_day_data variable is empty.")
+                return False
+        else:
+            return False
 
     def get_time(self):
-        if self.status_code_mars_gov != 200:
-            self.location_and_time = ''
-            self.location_str = ''
-            self.time_str = ''
-            self.time = []
-        else:
-            browser = initiate_selenium(MARS_NASA_GOV, 2)
-
-            # dirty time extraction straight form website
+        browser = initiate_selenium(MARS_NASA_GOV, 2)
+        try:
             self.location_and_time_str = (
                 browser.find_element_by_class_name('current_location')
                 .find_element_by_class_name('description')
@@ -190,14 +215,21 @@ class RoverDataScraper():
             am_pm = time_str_list[1]
             self.time = [hour, minutes, am_pm]
 
-            self.present_sol_number = int(browser.find_element_by_class_name('time_years').text[:4])
+            self.present_sol_number = int(
+                browser.find_element_by_class_name('time_years').text[:4])
 
-            print((
-                time_now() + 'actual time collected. Present sol: {}. Local Mars time is: {}.'
-                .format(self.present_sol_number, str(self.time)))
-            )
-            print(time_now() + 'location collected. Rover is in: {}'.format(self.location_str))
+            logger.info(('Actual time collected. Present sol: {}. Local Mars time is: {}.'
+                         .format(self.present_sol_number, str(self.time)))
+                        )
+            logger.info('Location collected. Rover is in: {}.'.format(self.location_str))
             browser.close()
+            return True
+        except Exception as error:
+            self.location_and_time = ''
+            self.location_str = ''
+            self.time_str = ''
+            self.time = []
+            return False
 
     def get_photos(self, sol, cam):
         '''ROVER CAMERAS
@@ -219,7 +251,7 @@ class RoverDataScraper():
         data = json.loads(response.text)
         no_of_photos = len(data['photos'])
         file_names = []
-        print(time_now() + 'number of photos: {}'.format(no_of_photos))
+        logger.info('Number of photos: {}'.format(no_of_photos))
         photo_id = 1
         for element in data['photos']:
             browser = initiate_selenium(element['img_src'], 2)
@@ -233,5 +265,5 @@ class RoverDataScraper():
 
             self.photo_file_names.append('{}-{}-{}.jpg'.format(sol, cam, photo_id))
             browser.close()
-            print("Photos left: {}".format(no_of_photos - photo_id))
+            logger.info("Photos left: {}".format(no_of_photos - photo_id))
             photo_id += 1
